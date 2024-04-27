@@ -1,1 +1,12 @@
 # relayer-challenge
+Please see the accompanying video demo for a quick explanation/walkthrough of the code.
+
+Files:
+    * block_crawler.py - the database population script  Note: This drops and (re)creates existing tables ('blocks' and 'transactions') each time it is run.
+    * query.sql - a raw sql query to provide the info requested in the problem description
+    * results.txt - the block number and volume returned by the SQL query
+    * requirements.txt - project dependencies
+
+To run:
+    'python block_crawler.py' followed by the three positional arguments specified in the problem description (I use a postgres database)
+        Ex.  python block_crawler.py https://quiknode.pro/key/ postgresql://postgres@localhost:5432/eth_db 18908800-18909050

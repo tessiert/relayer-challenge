@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Local containerized postgres dev DB
+docker-compose.yml
+pg_data/
+pgadmin_data/
+
 # C extensions
 *.so
 
