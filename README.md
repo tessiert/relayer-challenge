@@ -2,7 +2,7 @@
 
 **Notes:**
 
-- Please see the accompanying video demo for a quick explanation/walkthrough of the code.
+- Please see the video demo below for a quick explanation/walkthrough of the code.
 
 - block_crawler.py drops and (re)creates the 'blocks' and 'transactions' tables each time it is run.
 
