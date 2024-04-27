@@ -1,14 +1,20 @@
 # relayer-challenge
-Please see the accompanying video demo for a quick explanation/walkthrough of the code.
+
+**Notes:**
+
+- Please see the accompanying video demo for a quick explanation/walkthrough of the code.
+
+- block_crawler.py drops and (re)creates the 'blocks' and 'transactions' tables each time it is run.
 
 Files:
-    - block_crawler.py - the database population script  
-    
-    - query.sql - a raw sql query to provide the info requested in the problem description
 
-    - results.txt - the block number and volume returned by the SQL query
+- block_crawler.py (the database population script)  
 
-    - requirements.txt - project dependencies
+- query.sql - a raw sql query to provide the info requested in the problem description
+
+- results.txt - the block number and volume returned by the SQL query
+
+- requirements.txt - project dependencies
 
 To run:  
 
