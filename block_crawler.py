@@ -7,12 +7,13 @@ from datetime import datetime, timezone
 def main():
     num_args = len(sys.argv) - 1 # First entry is name of script
 
-    if num_args < 3:
+    if num_args != 3:
         print('Three inputs required - ETH endpoint, DB connection, and block range (start-end)')
         return
 
     endpoint, db_conn, block_range = sys.argv[1:]
 
+    # 
     try:
         start_block, end_block = block_range.split('-')
         start_block = int(start_block)
@@ -28,7 +29,6 @@ def main():
     conn = psycopg2.connect(db_conn)
 
     with conn:
-
         # (Re)create DB tables, FK constraint, and index
         with conn.cursor() as curs:
             curs.execute("""DROP TABLE IF EXISTS transactions;""")
@@ -55,47 +55,53 @@ def main():
                             ADD CONSTRAINT fk_transactions_blocks FOREIGN KEY (blockNumber) REFERENCES blocks (number);
                         """)
             
-            curs.execute("""CREATE INDEX blockNumber_index on transactions (blockNumber);""")
-            
-    # Persist to DB
+    # Persist schema to DB
     try:
         conn.commit()
     except:
         print('Error creating database schema - exiting')
         return
     
-    # Retrieve blocks in specified range and populate DB
-    for cur_block in range(start_block, end_block + 1):
-        payload = json.dumps({
-        "method": "eth_getBlockByNumber",
-        "params": [hex(cur_block), True],
-        "id": 1,
-        "jsonrpc": "2.0"
-        })
+    # Proceed with data insertion
+    with conn.cursor() as curs:
+        # Retrieve blocks in specified range
+        for cur_block in range(start_block, end_block + 1):
+            payload = json.dumps({
+            "method": "eth_getBlockByNumber",
+            "params": [hex(cur_block), True],
+            "id": 1,
+            "jsonrpc": "2.0"
+            })
 
-        response = requests.request("POST", endpoint, headers=headers, data=payload)
+            response = requests.request("POST", endpoint, headers=headers, data=payload)
 
-        if response.status_code != 200:
-            print('ETH API call failed - please confirm the supplied arguments are correct')
-            return
-        
-        block_data = response.json()['result']
+            if response.status_code != 200:
+                print('ETH API call failed - please confirm the supplied arguments are correct')
+                return
+            
+            block_data = response.json()['result']
 
-        # Populate 'blocks' table
-        with conn.cursor() as curs:
+            # Populate 'blocks' table
             utc_datetime = datetime.fromtimestamp(int(block_data["timestamp"], 16), tz=timezone.utc)
             curs.execute(f"""INSERT INTO blocks (hash, number, timestamp)
                             VALUES ('{block_data["hash"]}', '{block_data["number"]}', '{utc_datetime}');
                         """)
-            
+
             # Populate 'transactions' table with transactions in cur_block
+            # Build a single insert per block to speed up data insertion
+            transactions_insert = 'INSERT INTO transactions (hash, blockHash, blockNumber, value) VALUES'
             for transaction in block_data["transactions"]:
                 int_value = int(transaction["value"], 16)
-                curs.execute(f"""INSERT INTO transactions (hash, blockHash, blockNumber, value)
-                                VALUES ('{transaction["hash"]}', '{transaction["blockHash"]}', '{transaction["blockNumber"]}', '{int_value}');
-                            """)
 
-    # Persist and clean up
+                transactions_insert += f"""\n('{transaction["hash"]}', '{transaction["blockHash"]}', '{transaction["blockNumber"]}', '{int_value}'),"""
+
+            transactions_insert = transactions_insert.rstrip(',') + ';'
+            curs.execute(transactions_insert)
+
+        # Add index at end to speed up data insertion                
+        curs.execute("""CREATE INDEX blockNumber_index on transactions (blockNumber);""")
+
+    # Write to DB and clean up
     try:   
         conn.commit()         
     except:
