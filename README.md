@@ -21,3 +21,5 @@ To run:
 'python block_crawler.py' followed by the three positional arguments specified in the problem description (I use a postgres database) 
 
 Ex.  python block_crawler.py https://quiknode.pro/key/ postgresql://postgres@localhost:5432/eth_db 18908800-18909050
+
+https://github.com/tessiert/relayer-challenge/assets/39570561/650d20ca-a330-4e20-84e9-e0ccbfab9c51
